@@ -1,0 +1,80 @@
+############################
+# .NET / C# Backend
+############################
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet packages
+*.nupkg
+packages/
+*.snupkg
+
+# Logs
+*.log
+
+# Environment files
+appsettings.Development.json
+
+# Temporary files
+*.tmp
+
+############################
+# React Frontend
+############################
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+############################
+# OS Specific
+############################
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+############################
+# IDE Files
+############################
+
+# VSCode
+.vscode/
+
+# Rider / JetBrains
+.idea/
+
+# Visual Studio
+*.vs/
+.vs/
+
+############################
+# Git
+############################
+*.orig
