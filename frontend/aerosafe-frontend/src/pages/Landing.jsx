@@ -29,7 +29,14 @@ const Landing = () => {
 
         <p className="landing-login">
           Already have an account?{' '}
-          <a href="/login" className="landing-link">
+          <a
+            href="/login"
+            className="landing-link"
+            onClick={(e) => {
+              e.preventDefault()
+              handleNavigate('/login')
+            }}
+          >
             Login
           </a>
         </p>

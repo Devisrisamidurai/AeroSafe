@@ -1,12 +1,77 @@
 import { useNavigate } from 'react-router-dom'
 import { ShieldCheck } from 'lucide-react'
+import { useState } from 'react'
+import { authAPI, saveAuthData } from '../services/api'
 
 const AdminSignup = () => {
   const navigate = useNavigate()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [adminId, setAdminId] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (event) => {
+  const isValidEmail = (e) => /^\S+@\S+\.\S+$/.test(e)
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    // Placeholder for future integration with backend API
+    setError('')
+    setLoading(true)
+
+    // Validation
+    if (!name.trim()) {
+      setError('Name is required')
+      setLoading(false)
+      return
+    }
+
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address')
+      setLoading(false)
+      return
+    }
+
+    if (!adminId.trim()) {
+      setError('Admin ID is required')
+      setLoading(false)
+      return
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters')
+      setLoading(false)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await authAPI.adminSignup({
+        name,
+        email,
+        adminId,
+        password,
+        confirmPassword,
+      })
+
+      if (response.success && response.token) {
+        saveAuthData(response.token, response.user)
+        // Navigate to verification page to test authentication
+        navigate('/verify')
+      } else {
+        setError(response.message || 'Signup failed')
+      }
+    } catch (err) {
+      setError(err.message || 'Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -20,7 +85,7 @@ const AdminSignup = () => {
         <form className="signup-form" onSubmit={handleSubmit}>
           <div className="form-field">
             <label htmlFor="admin-name">Name</label>
-            <input id="admin-name" name="name" type="text" placeholder="Enter full name" required />
+            <input id="admin-name" name="name" type="text" placeholder="Enter full name" required value={name} onChange={(e) => setName(e.target.value)} />
           </div>
 
           <div className="form-field">
@@ -31,12 +96,14 @@ const AdminSignup = () => {
               type="email"
               placeholder="admin@example.com"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
           <div className="form-field">
             <label htmlFor="admin-id">Admin ID</label>
-            <input id="admin-id" name="adminId" type="text" placeholder="AS-ADM-001" required />
+            <input id="admin-id" name="adminId" type="text" placeholder="AS-ADM-001" required value={adminId} onChange={(e) => setAdminId(e.target.value)} />
           </div>
 
           <div className="form-field">
@@ -47,6 +114,8 @@ const AdminSignup = () => {
               type="password"
               placeholder="Enter password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
@@ -58,17 +127,28 @@ const AdminSignup = () => {
               type="password"
               placeholder="Re-enter password"
               required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
 
-          <button type="submit" className="signup-button">
-            Signup
+          {error && <p style={{ color: 'crimson', fontSize: '0.9rem', marginTop: '0.5rem' }}>{error}</p>}
+
+          <button type="submit" className="signup-button" disabled={loading}>
+            {loading ? 'Signing up...' : 'Signup'}
           </button>
         </form>
 
         <p className="login-cta">
           Already have an account?{' '}
-          <a href="/login" className="landing-link">
+          <a
+            href="/login"
+            className="landing-link"
+            onClick={(e) => {
+              e.preventDefault()
+              navigate('/login')
+            }}
+          >
             Login
           </a>
         </p>
