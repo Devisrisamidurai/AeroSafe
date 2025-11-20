@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using AeroSafeBackend.DTOs;
 using AeroSafeBackend.Services;
 
@@ -80,6 +82,30 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpGet("verify")]
+    [Authorize]
+    public ActionResult<object> VerifyToken()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        var uid = User.FindFirstValue("Uid");
+        var name = User.FindFirstValue("Name");
+
+        return Ok(new
+        {
+            Success = true,
+            Message = "Token is valid",
+            User = new
+            {
+                Id = userId,
+                Email = email,
+                Role = role,
+                Uid = uid,
+                Name = name
+            },
+            Claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
+        });
+    }
 }
-
-

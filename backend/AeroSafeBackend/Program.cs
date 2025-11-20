@@ -8,6 +8,9 @@ using AeroSafeBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Force Kestrel to listen on a fixed HTTP port for local development
+builder.WebHost.UseUrls("http://localhost:5121");
+
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -93,7 +96,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AeroSafe API v1");
+        c.RoutePrefix = "swagger";
+    });
 }
 
 app.UseHttpsRedirection();
@@ -107,6 +114,9 @@ app.UseAuthorization();
 
 // Map Controllers (for /api/ routes)
 app.MapControllers();
+
+// Redirect root path to Swagger UI
+app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
 
 // Keep weather API
 var summaries = new[]
@@ -128,6 +138,8 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+
+// No demo seeding — use real signups to create users in the database.
 
 app.Run();
 
