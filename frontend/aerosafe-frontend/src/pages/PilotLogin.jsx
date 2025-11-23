@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Plane, Key, User } from 'lucide-react'
-import { authAPI, saveAuthData } from '../services/api'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Plane, Key, User, Eye, EyeOff } from 'lucide-react'
+import { authAPI } from '../services/api'
 
 const PilotLogin = () => {
   const navigate = useNavigate()
@@ -9,33 +9,39 @@ const PilotLogin = () => {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     setError('')
     setLoading(true)
 
-    const isValidEmail = (e) => /^\S+@\S+\.\S+$/.test(e)
-    if (!isValidEmail(email)) {
+    if (!emailRegex.test(email)) {
       setError('Please enter a valid email address')
       setLoading(false)
       return
     }
 
     try {
-      const body = await authAPI.login(email, password)
+      const response = await authAPI.login(email, password, 'Pilot')
 
-      if (body?.success && body?.token) {
-        saveAuthData(body.token, body.user)
-        const role = body.user?.role || body.user?.Role || ''
-        if (role.toLowerCase() === 'pilot') navigate('/pilot/dashboard')
-        else if (role.toLowerCase() === 'admin') navigate('/admin/dashboard')
-        else navigate('/')
+      if (response.success && response.token) {
+        const storage = remember ? localStorage : sessionStorage
+        storage.setItem('token', response.token)
+        if (response.user) {
+          storage.setItem('user', JSON.stringify(response.user))
+        }
+        const otherStorage = remember ? sessionStorage : localStorage
+        otherStorage.removeItem('token')
+        otherStorage.removeItem('user')
+
+        navigate('/verify')
       } else {
-        setError(body?.message || 'Login failed')
+        setError(response.message || 'Login failed')
       }
     } catch (err) {
-      setError(err.message || 'Network error')
+      setError(err.message || 'Network error. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -66,16 +72,36 @@ const PilotLogin = () => {
           </div>
 
           <div className="form-field">
+            <label htmlFor="pilot-id">Pilot ID</label>
+            <input
+              id="pilot-id"
+              name="pilotId"
+              type="text"
+              placeholder="AS-PLT-001"
+              value={pilotId}
+              onChange={(e) => setPilotId(e.target.value)}
+            />
+          </div>
+
+          <div className="form-field password-field">
             <label htmlFor="pilot-password">Password <Key size={14} style={{ verticalAlign: 'middle', marginLeft: '6px' }} /></label>
             <input
               id="pilot-password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="Enter password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <button
+              type="button"
+              className="password-toggle"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <a href="#" style={{ marginLeft: 'auto', fontSize: '0.9rem' }} onClick={(e) => e.preventDefault()}>
